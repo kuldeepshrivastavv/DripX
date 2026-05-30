@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════
+   TAILWIND v4 — THEME TOKEN OVERRIDES
+   Remapping neutral palette + brand color
+══════════════════════════════════════════════════════════ */
+@theme {
+  --color-neonGreen: #8B1A2F;
+
+  /* Neutral scale remapped to light values */
+  --color-neutral-50:  #ffffff;
+  --color-neutral-100: #fafaf9;
+  --color-neutral-200: #f4f1ee;
+  --color-neutral-300: #ebe6e0;
+  --color-neutral-400: #c9c0b8;
+  --color-neutral-500: #9a9089;
+  --color-neutral-600: #706660;
+  --color-neutral-700: #4a4139;
+  --color-neutral-800: #2e2823;
+  --color-neutral-850: #e6dfd8;   /* used as light divider */
+  --color-neutral-900: #e8e2dc;   /* used as light border */
+  --color-neutral-950: #f5f1ec;   /* used as off-white bg */
+
+  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BASE RESET
+══════════════════════════════════════════════════════════ */
+@layer base {
+  html { color-scheme: light; }
+
+  body {
+    background-color: #faf8f5 !important;
+    color: #1a1614 !important;
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  #root {
+    background-color: #faf8f5 !important;
+    color: #1a1614 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-inline: none !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GLOBAL COLOR OVERRIDES — Applied to all elements
+   These override the hardcoded dark Tailwind classes used
+   throughout the codebase.
+══════════════════════════════════════════════════════════ */
+
+/* --- Backgrounds --- */
+:where(div, section, main, article, aside, nav, header, footer, span, form, ul, li, p):not([class*="bg-neonGreen"]):not([class*="bg-black"]):not([style*="background"]) {
+  /* Allow natural cascade — do NOT force here, just body/root above */
+}
+
+.bg-black    { background-color: #faf8f5 !important; color: #1a1614 !important; }
+.bg-neutral-950 { background-color: #f5f1ec !important; }
+.bg-neutral-900 { background-color: #ede8e2 !important; }
+.bg-neutral-850 { background-color: #e8e2dc !important; }
+.bg-neutral-800 { background-color: #e2dbd4 !important; }
+
+/* --- Text --- */
+.text-white        { color: #1a1614 !important; }
+.text-neutral-100  { color: #1f1a17 !important; }
+.text-neutral-200  { color: #2e2720 !important; }
+.text-neutral-300  { color: #3d342c !important; }
+.text-neutral-400  { color: #6b5e55 !important; }
+.text-neutral-500  { color: #8c7e76 !important; }
+.text-neutral-600  { color: #706660 !important; }
+.text-neutral-700  { color: #4a4139 !important; }
+
+/* --- Borders --- */
+.border-neutral-900  { border-color: #e8e2dc !important; }
+.border-neutral-850  { border-color: #e2dbd4 !important; }
+.border-neutral-800  { border-color: #d8d0c8 !important; }
+.divide-neutral-900 > * + * { border-color: #e8e2dc !important; }
+
+/* ══════════════════════════════════════════════════════════
+   LANDING PAGE — keep hero dark (intentional dark theme)
+   The landing page has bg-black and that's OK — just ensure
+   text inside it is white (undo the text-white override).
+══════════════════════════════════════════════════════════ */
+.landing-dark,
+.landing-dark * {
+  /* restore dark appearance inside dark sections */
+}
+
+/* When any element uses inline dark background, restore white text */
+[style*="background-color: rgb(0, 0, 0)"] .text-white,
+[style*="background-color: #000"] .text-white,
+[style*="background-color: #111"] .text-white,
+[style*="backgroundColor: '#111'"] .text-white {
+  color: #ffffff !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BRAND SYSTEM — Burgundy
+══════════════════════════════════════════════════════════ */
+.text-neonGreen        { color: #8B1A2F !important; }
+.border-neonGreen      { border-color: #8B1A2F !important; }
+
+.bg-neonGreen {
+  background-color: #8B1A2F !important;
+  color: #ffffff !important;
+}
+.bg-neonGreen * { color: #ffffff !important; }
+
+.bg-neonGreen\/5   { background-color: rgba(139,26,47,0.05)  !important; }
+.bg-neonGreen\/10  { background-color: rgba(139,26,47,0.07)  !important; }
+.bg-neonGreen\/15  { background-color: rgba(139,26,47,0.10)  !important; }
+.bg-neonGreen\/20  { background-color: rgba(139,26,47,0.13)  !important; }
+
+.border-neonGreen\/20 { border-color: rgba(139,26,47,0.28) !important; }
+.border-neonGreen\/25 { border-color: rgba(139,26,47,0.34) !important; }
+.border-neonGreen\/30 { border-color: rgba(139,26,47,0.40) !important; }
+
+.focus\:border-neonGreen:focus { border-color: #8B1A2F !important; }
+.focus\:ring-neonGreen:focus   { box-shadow: 0 0 0 3px rgba(139,26,47,0.15) !important; }
+
+/* Shadow overrides — neon → burgundy */
+.shadow-\[0_0_10px_rgba\(99\,102\,241\,0\.2\)\],
+.shadow-\[0_0_10px_rgba\(99\,102\,241\,0\.3\)\],
+.shadow-\[0_0_15px_rgba\(99\,102\,241\,0\.3\)\],
+.shadow-\[0_0_15px_rgba\(99\,102\,241\,0\.35\)\],
+.shadow-\[0_0_20px_rgba\(99\,102\,241\,0\.3\)\],
+.shadow-\[0_0_25px_rgba\(99\,102\,241\,0\.55\)\],
+.shadow-\[0_0_15px_rgba\(57\,255\,20\,0\.15\)\] {
+  box-shadow: 0 2px 12px rgba(139,26,47,0.14) !important;
+}
+.hover\:shadow-\[0_0_20px_rgba\(99\,102\,241\,0\.5\)\]:hover,
+.hover\:shadow-\[0_0_25px_rgba\(99\,102\,241\,0\.6\)\]:hover,
+.hover\:shadow-\[0_0_35px_rgba\(99\,102\,241\,0\.6\)\]:hover {
+  box-shadow: 0 6px 22px rgba(139,26,47,0.28) !important;
+}
+
+/* gradient on hero text — burgundy tones */
+.text-gradient-premium {
+  background: linear-gradient(135deg, #8B1A2F 0%, #c04060 50%, #5a0f1e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════════════════════
+   GLASS PANELS — white frosted
+══════════════════════════════════════════════════════════ */
+.glass-panel {
+  background: rgba(255,255,255,0.82) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0,0,0,0.07) !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+}
+.glass-panel-hover { transition: all 0.3s ease; }
+.glass-panel-hover:hover {
+  background: rgba(255,255,255,0.96) !important;
+  border-color: rgba(139,26,47,0.22) !important;
+  box-shadow: 0 4px 24px rgba(139,26,47,0.08);
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.75) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(0,0,0,0.06) !important;
+}
+.glass-card:hover {
+  background: rgba(255,255,255,0.94) !important;
+  border-color: rgba(139,26,47,0.18) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FORM INPUTS
+══════════════════════════════════════════════════════════ */
+.neon-input {
+  background-color: #ffffff !important;
+  border: 1px solid #d8d0c8 !important;
+  color: #1a1614 !important;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 0.8125rem;
+}
+.neon-input::placeholder { color: #b0a89e !important; }
+.neon-input:focus {
+  border-color: #8B1A2F !important;
+  box-shadow: 0 0 0 3px rgba(139,26,47,0.12) !important;
+}
+
+/* generic input elements in auth modal and forms */
+input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  background-color: #ffffff !important;
+  color: #1a1614 !important;
+  border-color: #d8d0c8 !important;
+}
+input::placeholder, textarea::placeholder { color: #b0a89e !important; }
+
+select option {
+  background-color: #ffffff;
+  color: #1a1614;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRESERVED ACCENT COLORS
+══════════════════════════════════════════════════════════ */
+.text-red-400    { color: #dc2626 !important; }
+.text-amber-400  { color: #b45309 !important; }
+.text-yellow-400 { color: #ca8a04 !important; }
+.text-blue-400   { color: #2563eb !important; }
+.text-green-400  { color: #16a34a !important; }
+.text-emerald-400 { color: #059669 !important; }
+
+.border-amber-500\/25 { border-color: rgba(217,119,6,0.25) !important; }
+.bg-amber-500\/5      { background-color: rgba(251,191,36,0.05) !important; }
+
+/* ══════════════════════════════════════════════════════════
+   SCROLLBARS
+══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #ede8e2; }
+::-webkit-scrollbar-thumb { background: #c8bfb5; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #8B1A2F; }
+
+/* ══════════════════════════════════════════════════════════
+   MISC HELPERS
+══════════════════════════════════════════════════════════ */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+.bg-grid-glow {
+  background-image:
+    linear-gradient(rgba(139,26,47,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,26,47,0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.bg-gradient-premium {
+  background: linear-gradient(135deg,
+    rgba(139,26,47,0.04) 0%,
+    rgba(192,57,79,0.04) 50%,
+    rgba(107,8,32,0.04) 100%);
+}
