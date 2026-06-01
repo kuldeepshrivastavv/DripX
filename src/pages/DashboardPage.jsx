@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -167,8 +169,68 @@ export default function DashboardPage() {
     }
   };
 
-  // Mock Reviews
-  const [reviewsList] = useState([]);
+  // Real Reviews loaded dynamically from Firestore
+  const [reviewsList, setReviewsList] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!shopkeeperShop) {
+      setReviewsLoading(false);
+      return;
+    }
+    const fetchShopReviews = async () => {
+      try {
+        const reviewsColRef = collection(db, 'reviews');
+        const q = query(
+          reviewsColRef,
+          where('shopId', '==', String(shopkeeperShop.id))
+        );
+        const querySnap = await getDocs(q);
+        
+        const fetchedReviews = [];
+        querySnap.forEach((docSnap) => {
+          fetchedReviews.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+        
+        // Sort by recent reviews first
+        fetchedReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setReviewsList(fetchedReviews);
+      } catch (err) {
+        console.error("Error fetching shop reviews: ", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchShopReviews();
+  }, [shopkeeperShop]);
+
+  const totalReviewsCount = reviewsList.length;
+  const averageRating = totalReviewsCount > 0 
+    ? Number((reviewsList.reduce((acc, rev) => acc + rev.rating, 0) / totalReviewsCount).toFixed(1))
+    : 5.0;
+
+  const count5 = reviewsList.filter(r => r.rating === 5).length;
+  const count4 = reviewsList.filter(r => r.rating === 4).length;
+  const count3 = reviewsList.filter(r => r.rating === 3).length;
+  const count2 = reviewsList.filter(r => r.rating === 2).length;
+  const count1 = reviewsList.filter(r => r.rating === 1).length;
+
+  const pct5 = totalReviewsCount > 0 ? Math.round((count5 / totalReviewsCount) * 100) : 100;
+  const pct4 = totalReviewsCount > 0 ? Math.round((count4 / totalReviewsCount) * 100) : 0;
+  const pct3 = totalReviewsCount > 0 ? Math.round((count3 / totalReviewsCount) * 100) : 0;
+  const pct2 = totalReviewsCount > 0 ? Math.round((count2 / totalReviewsCount) * 100) : 0;
+  const pct1 = totalReviewsCount > 0 ? Math.round((count1 / totalReviewsCount) * 100) : 0;
+
+  const getStandingLabel = (avg) => {
+    if (avg >= 4.5) return "Excellent standing";
+    if (avg >= 4.0) return "Good standing";
+    if (avg >= 3.0) return "Average standing";
+    return "Needs improvement";
+  };
 
   // Mock Notifications
   const [notifications, setNotifications] = useState([]);
@@ -1406,56 +1468,95 @@ export default function DashboardPage() {
                 <div className="text-center md:text-left">
                   <span className="text-neutral-500 text-[10px] uppercase font-black tracking-widest block">Average Score</span>
                   <div className="flex items-baseline gap-2 mt-1 justify-center md:justify-start">
-                    <span className="text-4xl font-black text-white">4.8</span>
+                    <span className="text-4xl font-black text-white">{averageRating}</span>
                     <span className="text-neutral-500 text-sm">/ 5.0</span>
                   </div>
                   <div className="flex items-center gap-1 text-neonGreen mt-1.5 justify-center md:justify-start">
-                    <Star className="w-3.5 h-3.5 fill-neonGreen text-neonGreen" />
-                    <Star className="w-3.5 h-3.5 fill-neonGreen text-neonGreen" />
-                    <Star className="w-3.5 h-3.5 fill-neonGreen text-neonGreen" />
-                    <Star className="w-3.5 h-3.5 fill-neonGreen text-neonGreen" />
-                    <Star className="w-3.5 h-3.5 fill-neutral-800 text-neutral-800" />
-                    <span className="text-[10px] text-neutral-400 font-bold ml-1">Excellent standing</span>
+                    {[1, 2, 3, 4, 5].map((starVal) => {
+                      const isGold = starVal <= averageRating;
+                      return (
+                        <Star 
+                          key={starVal} 
+                          className={`w-3.5 h-3.5 ${
+                            isGold ? 'fill-neonGreen text-neonGreen' : 'text-neutral-800'
+                          }`}
+                        />
+                      );
+                    })}
+                    <span className="text-[10px] text-neutral-400 font-bold ml-1">{getStandingLabel(averageRating)}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1 text-[10px] text-neutral-500 font-bold uppercase tracking-wider shrink-0 w-full md:w-auto max-w-[200px]">
                   <div className="flex justify-between items-center">
                     <span>5 Stars</span>
-                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full w-[80%] bg-neonGreen"/></span>
-                    <span className="text-white">80%</span>
+                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full bg-neonGreen" style={{ width: `${pct5}%` }}/></span>
+                    <span className="text-white">{pct5}%</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>4 Stars</span>
-                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full w-[20%] bg-neonGreen"/></span>
-                    <span className="text-white">20%</span>
+                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full bg-neonGreen" style={{ width: `${pct4}%` }}/></span>
+                    <span className="text-white">{pct4}%</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>3 Stars</span>
-                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full w-0 bg-neonGreen"/></span>
-                    <span className="text-white">0%</span>
+                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full bg-neonGreen" style={{ width: `${pct3}%` }}/></span>
+                    <span className="text-white">{pct3}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>2 Stars</span>
+                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full bg-neonGreen" style={{ width: `${pct2}%` }}/></span>
+                    <span className="text-white">{pct2}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>1 Star</span>
+                    <span className="w-24 h-2 bg-neutral-900 rounded-lg overflow-hidden mx-2"><span className="block h-full bg-neonGreen" style={{ width: `${pct1}%` }}/></span>
+                    <span className="text-white">{pct1}%</span>
                   </div>
                 </div>
               </div>
 
               {/* Feed displays */}
               <div className="flex flex-col gap-4">
-                {reviewsList.map((rev, idx) => (
-                  <div key={idx} className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 text-left">
-                    <div className="flex justify-between items-center border-b border-neutral-900 pb-3 mb-3">
-                      <div>
-                        <span className="text-white font-extrabold text-xs uppercase block">{rev.name}</span>
-                        <span className="text-[9px] text-neutral-500 font-bold block">{rev.date}</span>
-                      </div>
-                      <span className="bg-neonGreen/10 border border-neonGreen/20 text-neonGreen font-black text-[9px] px-2.5 py-0.5 rounded-lg flex items-center gap-1">
-                        ★ {rev.rating}
-                      </span>
-                    </div>
-                    <p className="text-neutral-400 text-xs leading-relaxed font-semibold italic">
-                      "{rev.comment}"
-                    </p>
+                {reviewsLoading ? (
+                  <div className="text-neutral-500 text-xs font-bold text-center py-8">
+                    Loading Reviews Feed...
                   </div>
-                ))}
+                ) : reviewsList.length === 0 ? (
+                  <div className="bg-neutral-950 border border-neutral-900 rounded-3xl p-12 text-center text-neutral-500 font-bold text-xs uppercase tracking-wider">
+                    No reviews submitted by customers yet.
+                  </div>
+                ) : (
+                  reviewsList.map((rev) => (
+                    <div key={rev.id} className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 text-left">
+                      <div className="flex justify-between items-start border-b border-neutral-900 pb-3 mb-3 flex-wrap gap-2">
+                        <div>
+                          <span className="text-white font-extrabold text-xs uppercase block">{rev.renterName || "Renter Customer"}</span>
+                          <span className="text-[9px] text-neutral-500 font-bold block mt-0.5">
+                            {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            }) : 'Recent'}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className="bg-neonGreen/10 border border-neonGreen/20 text-neonGreen font-black text-[9px] px-2.5 py-0.5 rounded-lg flex items-center gap-1">
+                            ★ {rev.rating}
+                          </span>
+                          {rev.outfitTitle && (
+                            <span className="text-[9px] text-neutral-500 font-bold">
+                              Outfit: <span className="text-white uppercase">{rev.outfitTitle}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-neutral-400 text-xs leading-relaxed font-semibold italic">
+                        "{rev.comment}"
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
 
             </div>
