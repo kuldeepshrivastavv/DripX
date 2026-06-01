@@ -321,14 +321,14 @@ export default function LandingPage() {
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-4xl md:text-8xl font-black tracking-tight text-white mb-6 leading-none uppercase max-w-5xl">
-          One Platform. <br />
-          Two Roles. <span className="text-gradient-premium">Endless Rentals.</span>
+        <h1 className="text-4xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 leading-none uppercase max-w-6xl">
+          Elevate Every Occasion <br />
+          with <span className="text-gradient-premium">Premium Fashion Rentals.</span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-neutral-400 text-base md:text-xl max-w-3xl mb-12 font-medium leading-relaxed">
-          Connect style lovers and boutiques in a smart fashion & clothing rental ecosystem. Rent designer wear, luxury fits, and streetwear nearby, or monetize your wardrobe by listing items.
+          Welcome to <span className="text-white font-extrabold tracking-widest text-gradient-premium">DRIPX</span> — a hyperlocal, premium fashion rental ecosystem. Discover designer outfits, wedding wear, and elite streetwear near you, or list your closet to monetize your style statement.
         </p>
 
         {/* Hero CTAs */}
