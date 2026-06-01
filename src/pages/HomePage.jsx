@@ -327,15 +327,17 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', borderTop:'1px solid #f0ebe4', paddingTop:12}} className="sm:flex-col sm:items-end sm:border-t-0 sm:pt-0">
-                      <span style={{color:'#8B1A2F', fontSize:'0.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em'}}>
-                        ● {booking.status}
-                      </span>
-                      <span style={{color:'#1a1614', fontWeight:800, fontSize:'0.9rem', marginTop:2}}>₹{booking.price}</span>
+                    <div style={{display:'flex', flexDirection:'column', gap:12, borderTop:'1px solid #f0ebe4', paddingTop:12, width:'100%'} } className="sm:flex-col sm:items-end sm:border-t-0 sm:pt-0 sm:gap-3 sm:w-auto">
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'} } className="sm:flex-col sm:items-end sm:justify-start">
+                        <span style={{color:'#8B1A2F', fontSize:'0.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em'}}>
+                          ● {booking.status}
+                        </span>
+                        <span style={{color:'#1a1614', fontWeight:800, fontSize:'0.9rem', marginTop:2}}>₹{booking.price}</span>
+                      </div>
 
                       {/* Leave Review or ✓ Reviewed Button */}
-                      {['Accepted', 'Confirmed', 'Completed'].includes(booking.status) && (
-                        <div style={{marginTop: 8}}>
+                      {['accepted', 'confirmed', 'completed'].includes(booking.status?.toLowerCase()) && (
+                        <div style={{display:'flex', justifyContent:'flex-end', width:'100%'} }>
                           {booking.reviewed ? (
                             <span style={{
                               color: '#16a34a',
