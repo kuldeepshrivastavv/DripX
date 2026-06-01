@@ -1,12 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Star, MapPin, ArrowLeft, ShieldCheck, Sparkles, Truck, Store, CalendarRange } from 'lucide-react';
+import { Star, MapPin, ArrowLeft, ShieldCheck, Sparkles, Truck, Store, CalendarRange, MessageSquare } from 'lucide-react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { outfits, shops, user } = useApp();
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const reviewsColRef = collection(db, 'reviews');
+        const q = query(
+          reviewsColRef,
+          where('outfitId', '==', String(id))
+        );
+        const querySnap = await getDocs(q);
+        
+        const fetchedReviews = [];
+        querySnap.forEach((docSnap) => {
+          const data = docSnap.data();
+          fetchedReviews.push({
+            id: docSnap.id,
+            ...data
+          });
+        });
+        
+        // Sort by date descending
+        fetchedReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setReviews(fetchedReviews);
+      } catch (err) {
+        console.error("Error loading reviews: ", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
 
   // Find target outfit
   const outfit = outfits.find(o => String(o.id) === String(id));
@@ -217,6 +254,77 @@ export default function ProductDetailPage() {
 
         </div>
 
+      </div>
+
+      {/* Customer Reviews Section */}
+      <div className="mt-16 border-t border-neutral-900 pt-12 text-left">
+        <h3 className="text-xl font-extrabold text-white uppercase tracking-wider mb-8 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-neonGreen" />
+          Customer Reviews ({reviews.length})
+        </h3>
+
+        {reviewsLoading ? (
+          <div className="text-center py-8 text-neutral-500 text-sm font-semibold uppercase tracking-widest">
+            Loading Reviews...
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="glass-panel border-neutral-900 rounded-2xl p-8 text-center text-neutral-500 text-sm font-semibold">
+            No reviews yet for this outfit. Be the first to rent and leave a review!
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {reviews.map((review) => (
+              <div 
+                key={review.id} 
+                className="glass-panel border-neutral-900 rounded-2xl p-6 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="text-xs uppercase font-extrabold text-white block">
+                        {review.renterName}
+                      </span>
+                      <span className="text-[10px] text-neutral-500 font-semibold block mt-0.5">
+                        {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        }) : 'Recent Rent'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((starVal) => {
+                        const isGold = starVal <= review.rating;
+                        return (
+                          <Star 
+                            key={starVal} 
+                            className={`w-3.5 h-3.5 ${
+                              isGold ? 'fill-neonGreen text-neonGreen' : 'text-neutral-800'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <p className="text-neutral-300 text-xs leading-relaxed font-medium">
+                    "{review.comment}"
+                  </p>
+                </div>
+
+                <div className="border-t border-neutral-900/60 pt-3 mt-4 flex items-center justify-between">
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-600 font-extrabold">
+                    Verified Rental
+                  </span>
+                  <span className="text-[10px] text-neonGreen font-extrabold uppercase">
+                    ✓ Verified Outfit
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>

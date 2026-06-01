@@ -135,6 +135,7 @@ export const AppProvider = ({ children }) => {
             deliveryFee: data.deliveryFee,
             address: data.address,
             status: data.status,
+            reviewed: data.reviewed || false,
           });
         });
         
@@ -505,6 +506,64 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const addReview = async (reviewData) => {
+    try {
+      const reviewId = `review_${Date.now()}`;
+      
+      const mappedReview = {
+        id: reviewId,
+        renterId: user ? user.uid : 'GUEST_USER',
+        renterName: user ? user.name : 'Renter Customer',
+        outfitId: String(reviewData.outfitId),
+        outfitTitle: reviewData.outfitTitle,
+        shopId: String(reviewData.shopId || 'shop_103'),
+        rating: Number(reviewData.rating),
+        comment: reviewData.comment,
+        createdAt: new Date().toISOString(),
+      };
+
+      // 1. Write review to Firestore /reviews
+      const reviewDocRef = doc(db, 'reviews', reviewId);
+      await setDoc(reviewDocRef, mappedReview);
+
+      // 2. Update booking in Firestore /bookings to set reviewed: true
+      const bookingsColRef = collection(db, 'bookings');
+      const q = query(bookingsColRef, where('id', '==', reviewData.bookingId));
+      const querySnap = await getDocs(q);
+      if (!querySnap.empty) {
+        const docSnap = querySnap.docs[0];
+        const docRef = doc(db, 'bookings', docSnap.id);
+        await setDoc(docRef, { reviewed: true }, { merge: true });
+      }
+
+      // Sync local bookings state to hide the button instantly!
+      setBookings(prev => prev.map(b => b.id === reviewData.bookingId ? { ...b, reviewed: true } : b));
+
+      // 3. Update outfit rating in local state & Firestore /outfits
+      const outfitDocRef = doc(db, 'outfits', String(reviewData.outfitId));
+      const outfitDocSnap = await getDoc(outfitDocRef);
+      if (outfitDocSnap.exists()) {
+        const outfitData = outfitDocSnap.data();
+        const currentCount = outfitData.reviewsCount || 0;
+        const currentRating = outfitData.rating || 5.0;
+        const newCount = currentCount + 1;
+        const newRating = Number(((currentRating * currentCount + reviewData.rating) / newCount).toFixed(1));
+
+        await setDoc(outfitDocRef, {
+          rating: newRating,
+          reviewsCount: newCount
+        }, { merge: true });
+
+        // Update local outfits state!
+        setOutfits(prev => prev.map(o => String(o.id) === String(reviewData.outfitId) ? { ...o, rating: newRating, reviewsCount: newCount } : o));
+      }
+
+    } catch (err) {
+      console.error("Error adding review to Firestore: ", err);
+      alert("Failed to save review details to database.");
+    }
+  };
+
   /** Upload outfit image to Firebase Storage and return download URL. */
   const uploadOutfitImage = async (file) => {
     try {
@@ -527,6 +586,7 @@ export const AppProvider = ({ children }) => {
       addBooking,
       registerShop,
       updateBookingStatus,
+      addReview,
       uploadOutfitImage,
       user,
       authLoading,

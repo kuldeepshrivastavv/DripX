@@ -6,7 +6,7 @@ import FilterSidebar from '../components/FilterSidebar';
 import { SlidersHorizontal, Trash2, User, Mail, Shield, Calendar, MapPin, Plus, ArrowRight, LayoutDashboard, ShoppingBag } from 'lucide-react';
 
 export default function HomePage() {
-  const { user, bookings, outfits } = useApp();
+  const { user, bookings, outfits, addReview } = useApp();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -20,6 +20,41 @@ export default function HomePage() {
   // Tab state: 'browse' (Collection) or 'overview' (My Bookings)
   // Renters default to browse; shopkeepers default to overview
   const [activeTab, setActiveTab] = useState(user?.role === 'Renter' ? 'browse' : 'overview');
+
+  // Review Modal states
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  const handleOpenReviewModal = (booking) => {
+    setSelectedBookingForReview(booking);
+    setReviewRating(5);
+    setReviewComment("");
+    setIsReviewModalOpen(true);
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBookingForReview) return;
+    setReviewSubmitting(true);
+    try {
+      await addReview({
+        bookingId: selectedBookingForReview.id,
+        outfitId: selectedBookingForReview.outfitId,
+        outfitTitle: selectedBookingForReview.outfitTitle,
+        rating: reviewRating,
+        comment: reviewComment,
+        shopId: selectedBookingForReview.shopId
+      });
+      setIsReviewModalOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   // Filter and Sorting states
   const [searchQuery, setSearchQuery] = useState("");
@@ -297,6 +332,49 @@ export default function HomePage() {
                         ● {booking.status}
                       </span>
                       <span style={{color:'#1a1614', fontWeight:800, fontSize:'0.9rem', marginTop:2}}>₹{booking.price}</span>
+
+                      {/* Leave Review or ✓ Reviewed Button */}
+                      {['Accepted', 'Confirmed', 'Completed'].includes(booking.status) && (
+                        <div style={{marginTop: 8}}>
+                          {booking.reviewed ? (
+                            <span style={{
+                              color: '#16a34a',
+                              fontSize: '0.6rem',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                              background: 'rgba(22,163,74,0.08)',
+                              border: '1px solid rgba(22,163,74,0.25)',
+                              padding: '4px 8px',
+                              borderRadius: 6,
+                              display: 'inline-block'
+                            }}>
+                              ✓ Reviewed
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenReviewModal(booking)}
+                              style={{
+                                background: '#8B1A2F',
+                                color: '#ffffff',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '0.6rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.08em',
+                                padding: '6px 12px',
+                                borderRadius: 8,
+                                transition: 'all 0.2s',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.background = '#721324'; }}
+                              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = '#8B1A2F'; }}
+                            >
+                              Leave Review
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -304,6 +382,187 @@ export default function HomePage() {
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* 3. Star-Rating glassmorphic overlay modal */}
+      {isReviewModalOpen && selectedBookingForReview && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(26, 22, 20, 0.4)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1.5rem'
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid #e8e2dc',
+            borderRadius: 24,
+            padding: 32,
+            width: '100%',
+            maxWidth: 420,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.12)',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            {/* Modal Header */}
+            <h3 style={{
+              color: '#1a1614',
+              fontWeight: 900,
+              fontSize: '1.15rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              marginBottom: 4,
+              marginTop: 0
+            }}>
+              Share Your Drip
+            </h3>
+            <p style={{
+              color: '#8c7e76',
+              fontSize: '0.75rem',
+              margin: '0 0 24px 0',
+              fontWeight: 500
+            }}>
+              How was your experience renting <span style={{ color: '#8B1A2F', fontWeight: 800 }}>{selectedBookingForReview.outfitTitle}</span>?
+            </p>
+
+            <form onSubmit={handleReviewSubmit}>
+              {/* Interactive Stars Selector */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 8,
+                marginBottom: 24
+              }}>
+                {[1, 2, 3, 4, 5].map((starValue) => {
+                  const isGold = starValue <= reviewRating;
+                  return (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onClick={() => setReviewRating(starValue)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 4,
+                        transition: 'transform 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.2)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="32"
+                        height="32"
+                        fill={isGold ? '#fbbf24' : 'none'}
+                        stroke={isGold ? '#fbbf24' : '#b0a89e'}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Textarea review comment */}
+              <div style={{ textAlign: 'left', marginBottom: 24 }}>
+                <label style={{
+                  display: 'block',
+                  color: '#6b5e55',
+                  fontSize: '0.6rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: 8
+                }}>
+                  Review Details
+                </label>
+                <textarea
+                  required
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="Describe the fit, quality, or service. Did you get compliments?"
+                  rows="4"
+                  style={{
+                    width: '100%',
+                    background: '#faf8f5',
+                    border: '1px solid #e8e2dc',
+                    borderRadius: 12,
+                    padding: 12,
+                    fontSize: '0.8rem',
+                    color: '#1a1614',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    resize: 'none',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => { e.target.style.borderColor = '#8B1A2F'; }}
+                  onBlur={e => { e.target.style.borderColor = '#e8e2dc'; }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  type="button"
+                  disabled={reviewSubmitting}
+                  onClick={() => setIsReviewModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    background: '#f5f1ec',
+                    color: '#6b5e55',
+                    border: '1px solid #e8e2dc',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#e8e2dc'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#f5f1ec'; }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={reviewSubmitting}
+                  style={{
+                    flex: 1,
+                    background: '#8B1A2F',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#721324'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#8B1A2F'; }}
+                >
+                  {reviewSubmitting ? 'Posting...' : 'Submit Review'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
