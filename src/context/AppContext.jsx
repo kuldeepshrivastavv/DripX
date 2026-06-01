@@ -298,14 +298,10 @@ export const AppProvider = ({ children }) => {
       await setDoc(userDocRef, profileData);
       storedRole = selectedRole;
     }
-    
-    if (storedRole !== selectedRole) {
-      await signOut(auth);
-      throw new Error(`ROLE_MISMATCH:${storedRole}`);
-    }
 
     // Explicitly set state to bypass Auth state listener race conditions
     setUser(profileData);
+    return storedRole;
   };
 
   /** Log in or sign up with Google, check/set Firestore role. */
@@ -318,13 +314,10 @@ export const AppProvider = ({ children }) => {
     const userDocSnap = await getDoc(userDocRef);
     
     let profileData = null;
+    let storedRole = selectedRole;
     if (userDocSnap.exists()) {
       const data = userDocSnap.data();
-      const storedRole = data.role || 'Renter';
-      if (storedRole !== selectedRole) {
-        await signOut(auth);
-        throw new Error(`ROLE_MISMATCH:${storedRole}`);
-      }
+      storedRole = data.role || 'Renter';
       profileData = {
         uid:       cred.user.uid,
         name:      data.name || cred.user.displayName || cred.user.email.split('@')[0],
@@ -348,6 +341,7 @@ export const AppProvider = ({ children }) => {
 
     // Explicitly set state to bypass Auth state listener race conditions
     setUser(profileData);
+    return storedRole;
   };
 
   /** Log out. */

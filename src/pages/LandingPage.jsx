@@ -78,25 +78,20 @@ export default function LandingPage() {
         setIsAuthModalOpen(false);
         navigate(role === 'Shopkeeper' ? '/dashboard' : '/home');
       } else {
-        await login(email, password, role);
+        const resolvedRole = await login(email, password, role);
         setIsAuthModalOpen(false);
-        navigate(role === 'Shopkeeper' ? '/dashboard' : '/home');
+        navigate(resolvedRole === 'Shopkeeper' ? '/dashboard' : '/home');
       }
     } catch (err) {
-      if (err.message && err.message.startsWith('ROLE_MISMATCH:')) {
-        const registeredRole = err.message.split(':')[1];
-        setAuthError(`This email is registered as a ${registeredRole}. You cannot login as a ${role === 'Shopkeeper' ? 'Shopkeeper/Partner' : 'Renter'}.`);
-      } else {
-        // Map Firebase error codes to readable messages
-        const code = err?.code || '';
-        if (code === 'auth/email-already-in-use')      setAuthError('This email is already registered. Try logging in.');
-        else if (code === 'auth/invalid-email')        setAuthError('Please enter a valid email address.');
-        else if (code === 'auth/weak-password')        setAuthError('Password must be at least 6 characters.');
-        else if (code === 'auth/user-not-found')       setAuthError('No account found for this email.');
-        else if (code === 'auth/wrong-password')       setAuthError('Incorrect password. Please try again.');
-        else if (code === 'auth/invalid-credential')   setAuthError('Invalid email or password.');
-        else                                           setAuthError(err.message || 'Something went wrong. Try again.');
-      }
+      // Map Firebase error codes to readable messages
+      const code = err?.code || '';
+      if (code === 'auth/email-already-in-use')      setAuthError('This email is already registered. Try logging in.');
+      else if (code === 'auth/invalid-email')        setAuthError('Please enter a valid email address.');
+      else if (code === 'auth/weak-password')        setAuthError('Password must be at least 6 characters.');
+      else if (code === 'auth/user-not-found')       setAuthError('No account found for this email.');
+      else if (code === 'auth/wrong-password')       setAuthError('Incorrect password. Please try again.');
+      else if (code === 'auth/invalid-credential')   setAuthError('Invalid email or password.');
+      else                                           setAuthError(err.message || 'Something went wrong. Try again.');
     } finally {
       setAuthSubmitting(false);
     }
@@ -106,22 +101,17 @@ export default function LandingPage() {
     setAuthSubmitting(true);
     setAuthError('');
     try {
-      await loginWithGoogle(role);
+      const resolvedRole = await loginWithGoogle(role);
       setIsAuthModalOpen(false);
-      navigate(role === 'Shopkeeper' ? '/dashboard' : '/home');
+      navigate(resolvedRole === 'Shopkeeper' ? '/dashboard' : '/home');
     } catch (err) {
-      if (err.message && err.message.startsWith('ROLE_MISMATCH:')) {
-        const registeredRole = err.message.split(':')[1];
-        setAuthError(`This email is registered as a ${registeredRole}. You cannot login as a ${role === 'Shopkeeper' ? 'Shopkeeper/Partner' : 'Renter'}.`);
+      const code = err?.code || '';
+      if (code === 'auth/popup-closed-by-user') {
+        setAuthError('Google sign-in popup was closed. Please try again.');
+      } else if (code === 'auth/operation-not-allowed') {
+        setAuthError('Google Sign-In is not enabled in Firebase Console.');
       } else {
-        const code = err?.code || '';
-        if (code === 'auth/popup-closed-by-user') {
-          setAuthError('Google sign-in popup was closed. Please try again.');
-        } else if (code === 'auth/operation-not-allowed') {
-          setAuthError('Google Sign-In is not enabled in Firebase Console.');
-        } else {
-          setAuthError(err.message || 'Failed to authenticate with Google.');
-        }
+        setAuthError(err.message || 'Failed to authenticate with Google.');
       }
     } finally {
       setAuthSubmitting(false);
