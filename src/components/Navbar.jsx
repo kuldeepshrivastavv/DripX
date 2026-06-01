@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, MapPin, LayoutDashboard, ShoppingBag, LogOut, LogIn, ChevronDown, Menu, X, ChevronRight, Phone } from 'lucide-react';
+import { Sparkles, MapPin, LayoutDashboard, ShoppingBag, LogOut, LogIn, ChevronDown, Menu, X, ChevronRight, Phone, Mail } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 // High-end unsplash fashion image directory mapped to sections
@@ -157,9 +157,9 @@ export default function Navbar() {
 
             {/* Support info */}
             <div className="flex items-center gap-6">
-              <a href="tel:+1800123456" style={{color:'#aaaaaa', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', display:'flex', alignItems:'center', gap:5}} className="hover:text-white transition-colors">
-                <Phone className="w-3.5 h-3.5" />
-                Need Help?
+              <a href="mailto:abcddtherate@gmail.com" style={{color:'#aaaaaa', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', display:'flex', alignItems:'center', gap:5, textDecoration:'none'}} className="hover:text-white transition-colors" title="Support: Kuldeep Shrivastava (abcddtherate@gmail.com)">
+                <Mail className="w-3.5 h-3.5 text-neonGreen" />
+                Need Help? Kuldeep Shrivastava
               </a>
               <button 
                 onClick={detectUserLocation}

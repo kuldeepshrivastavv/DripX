@@ -19,7 +19,8 @@ import {
   Building,
   CheckCircle2,
   ArrowRightLeft,
-  LogIn
+  LogIn,
+  Mail
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { auth } from '../firebase';
@@ -226,9 +227,9 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="flex items-center gap-6">
-              <a href="tel:+1800123456" style={{color:'#aaaaaa', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', display:'flex', alignItems:'center', gap:5, textDecoration:'none'}}>
-                <LogIn style={{width:13, height:13}} />
-                Need Help?
+              <a href="mailto:abcddtherate@gmail.com" style={{color:'#aaaaaa', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', display:'flex', alignItems:'center', gap:5, textDecoration:'none'}} title="Support: Kuldeep Shrivastava (abcddtherate@gmail.com)">
+                <Mail style={{width:13, height:13, color:'#10b981'}} />
+                Need Help? Kuldeep Shrivastava
               </a>
               <span style={{color:'#aaaaaa', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', display:'flex', alignItems:'center', gap:5}}>
                 ◎ Select Location
